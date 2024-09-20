@@ -1,0 +1,11 @@
+1. Run raw RTK data through processing code in R.
+
+2. Import processed RTK data into ArcPRO.
+
+3. Project processed RTK data using 'XY Table to Point', set coordinate system to Projected -> UTM -> NAD83 -> Zone 12N
+
+4. Calculate distance between points using 'Generate Near Table'.
+
+5. Add UID for IN_FID and NEAR_FID by using 'Join Field' with the RTK spatial data.
+
+6. Attribute to master data set.

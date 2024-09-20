@@ -1,0 +1,66 @@
+import arcpy
+
+arcpy.env.workspace = "C:/Users/A02290896/Documents/ACWA/Data/PhD_Data/Spatial/Processed/Ch3_Barriers_GDB.gdb/Barriers"
+
+
+#
+# Span/Bankfull Calculation
+#
+inTable = 'Barriers_Sample_All'
+fieldName = 'Span_div_bankfull'
+expression = 'spanBank(!Span_m!, !Bankfull_width_m!)'
+
+codeblock = """
+def spanBank(inSpan, inBank):
+    return (inSpan / inBank) * 100 """
+
+arcpy.CalculateField_management(inTable, fieldName, expression, 'PYTHON3', codeblock)
+#
+# END: Span/Bankfull Calculation
+#
+
+
+
+
+#
+# Slope Calculation
+#
+inTable = 'Barriers_Sample_All'
+fieldName = 'Slope_perc'
+expression = 'slope(!Elevation_inlet_m!, !Elevation_outlet_m!, !Length_m!)'
+
+codeblock = """
+def slope(inElevIn, inElevOut, inLength):
+    return (abs(inElevIn - inElevOut) / inLength) * 100 """
+
+arcpy.CalculateField_management(inTable, fieldName, expression, 'PYTHON3', codeblock)
+#
+# END: Slope Calculation
+#
+
+
+
+
+#
+# Countersunk Calculation
+#
+inTable = 'Barriers_Sample_All'
+fieldName = 'Countersunk'
+expression = 'countersunk(!Bed_material_throughout!, !Bed_material_depth_outlet_m!, !Rise_m!)'
+
+codeblock = """
+def countersunk(inBedMat, inBedDepth, inRise):
+    if inBedMat == 'TRUE':
+        if inBedDepth >= inRise * 0.2:
+            return 'TRUE'
+        else:
+            return 'FALSE'
+    elif inBedMat == 'FALSE':
+        return 'FALSE'
+    else:
+        return None """
+
+arcpy.CalculateField_management(inTable, fieldName, expression, 'PYTHON3', codeblock)
+#
+# END: Countersunk Calculation
+#

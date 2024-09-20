@@ -1,0 +1,156 @@
+import arcpy
+
+arcpy.env.workspace = "C:/Users/A02290896/Documents/ACWA/Data/PhD_Data/Spatial/Processed/Ch3_Barriers_GDB.gdb/Barriers"
+
+inTable = 'Barriers_Sampled'
+fieldName = 'Pass_WDFG'
+expression = 'passability(!Stream_wetted!, !Barrier_Observed!, !Bridge_Obstruction!, !Water_surface_drop_m!, !Span_div_bankfull!, !Length_m!, !Slope_perc!, !Backwatered!, !Countersunk!, !Depth_m!, !Velocity_mps!)'
+
+codeblock = """
+def passability(inStreamWetted, inBarrier, inBridgeObstruction, inWSD, inSpanBank, inLength, inSlope, inBackwatered, inCountersunk, inDepth, inVelocity):
+    if inBarrier == 'ABS':
+        return '1.0'
+
+    elif inBarrier == 'OTH':
+        return 'Unknown'
+
+    elif inBarrier == 'NCRC':
+        if inBridgeObstruction == 'FALSE':
+            return '1.0'
+        elif inBridgeObstruction == 'TRUE':
+            if inWSD is None:
+                return 'NO_WSD'
+            if inWSD >= 0.24:
+                if inWSD <= 0.49:
+                    return '0.67'
+                elif inWSD >= 1.0:
+                    return '0.0'
+                else:
+                    return '0.33'
+            elif inSpanBank >= 0.75:
+                return '1.0'
+            elif inSlope < 1.0:
+                return '1.0'
+            elif inSlope >= 1.0:
+                if inLength < 18.3:
+                    if inSlope <= 1.99:
+                        return '0.67'
+                    elif inSlope >= 4.0:
+                        return '0.0'
+                    else:
+                        return '0.33'
+                elif inLength >= 18.3:
+                    if inSlope >= 2.0:
+                        return '0.0'
+                    else:
+                        return '0.33'
+            else:
+                return 'END_NCRC_OBS'
+        else:
+            return 'END_NCRC'
+
+    elif inBarrier == 'CUL':
+        if inWSD is None:
+            if inStreamWetted == 'FALSE':
+                return 'Unknown'
+            else:
+                return 'No_WSD'
+
+        elif inWSD >= 0.24:
+            if inWSD <= 0.49:
+                return '0.67'
+            elif inWSD >= 1.0:
+                return '0.0'
+            else:
+                return '0.33'
+
+        elif inCountersunk == 'TRUE':
+            if inSpanBank >= 75.0:
+                return '1.0'
+            elif inDepth <= 0.04:
+                return '0.0'
+            elif inDepth <= 0.14:
+                return '0.33'
+            elif (inLength <= 30.4 and inVelocity >= 1.83):
+                return '0.33'
+            elif ((inLength > 30.4 and inLength <= 61) and inVelocity >= 1.53):
+                return '0.33'
+            elif (inLength > 61 and inVelocity >= 1.22):
+                return '0.33'
+            elif inDepth <= 0.30:
+                return '0.67'
+            elif (inLength <= 30.4 and (inVelocity < 1.83 and inVelocity >= 1.22)):
+                return '0.67'
+            elif ((inLength > 30.4 and inLength <= 61) and (inVelocity < 1.53 and inVelocity >= 0.92)):
+                return '0.67'
+            elif (inLength > 61 and (inVelocity < 1.22 and inVelocity >= 0.61)):
+                return '0.67'
+            else:
+                return '1.0'
+
+        elif inBackwatered == 'TRUE':
+            if inDepth <= 0.04:
+                return '0.0'
+            elif inDepth <= 0.14:
+                return '0.33'
+            elif (inLength <= 30.4 and inVelocity >= 1.83):
+                return '0.33'
+            elif ((inLength > 30.4 and inLength <= 61) and inVelocity >= 1.53):
+                return '0.33'
+            elif (inLength > 61 and inVelocity >= 1.22):
+                return '0.33'
+            elif inDepth <= 0.30:
+                return '0.67'
+            elif (inLength <= 30.4 and (inVelocity < 1.83 and inVelocity >= 1.22)):
+                return '0.67'
+            elif ((inLength > 30.4 and inLength <= 61) and (inVelocity < 1.53 and inVelocity >= 0.92)):
+                return '0.67'
+            elif (inLength > 61 and (inVelocity < 1.22 and inVelocity >= 0.61)):
+                return '0.67'
+            else:
+                return '1.0'
+
+        elif inSlope >= 1.0:
+            if inLength < 18.3:
+                if inSlope <= 1.99:
+                    return '0.67'
+                elif inSlope >= 4.0:
+                    return '0.0'
+                else:
+                    return '0.33'
+            elif inLength >= 18.3:
+                if inSlope >= 2.0:
+                    return '0.0'
+                else:
+                    return '0.33'
+
+        elif inSlope < 1.0:
+            if inDepth <= 0.04:
+                return '0.0'
+            elif inDepth <= 0.14:
+                return '0.33'
+            elif (inLength <= 30.4 and inVelocity >= 1.83):
+                return '0.33'
+            elif ((inLength > 30.4 and inLength <= 61) and inVelocity >= 1.53):
+                return '0.33'
+            elif (inLength > 61 and inVelocity >= 1.22):
+                return '0.33'
+            elif inDepth <= 0.30:
+                return '0.67'
+            elif (inLength <= 30.4 and (inVelocity < 1.83 and inVelocity >= 1.22)):
+                return '0.67'
+            elif ((inLength > 30.4 and inLength <= 61) and (inVelocity < 1.53 and inVelocity >= 0.92)):
+                return '0.67'
+            elif (inLength > 61 and (inVelocity < 1.22 and inVelocity >= 0.61)):
+                return '0.67'
+            else:
+                return '1.0'
+
+        else:
+            return 'END_CUL'
+
+    else:
+        return None """
+
+arcpy.CalculateField_management(inTable, fieldName, expression, 'PYTHON3', codeblock)
+
